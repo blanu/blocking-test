@@ -1,0 +1,39 @@
+Introduction
+
+Using the framework is simple.
+
+First you generate some captured traffic, some of which is encoded with
+blocking-resistant transports, some of which is just normal Tor traffic, and
+some of which is non-Tor traffic such as HTTP, HTTPS, non-HTTP SSL, Skype, DNS,
+etc.
+
+Then you run detector code against the captured traffic and it tries to classify
+the streams into those which should be blocked and those which should be allowed
+to go through.
+
+The detector code can use the full range of Deep Packet Inspection techniques
+such as string matching, packet lengths, and packet timings. You can then look
+at the results of which streams were classified as blocked and which weren't and
+you can compare this to which blocking-resistant transports were used. The goal
+is to find a blocking-resistant transport that gets past more detectors than the
+rest. This is all automated much like unit testing where you run a single
+command and it will give you back the results of which transport did best for
+the scenario. Multiple scenarios will be available to test against different
+types of attackers.
+
+The purpose of this project is to provide a measurable way to compare
+transports. It's quite easy to derive new transport encodings and to imagine
+how they might be very effective against an attacker. However, there is no way
+to test their real effectiveness without using them in the field, which can
+sometimes be difficult to set up logistically. There could also be negative
+effects from using a flawed transport in the field before it's ready. Using this
+framework, attackers, both real and imaginary, can be modeled and the transports
+tested against the models. The models can be refined from experience in the
+field and field testing can be reserved for only the most effective candidates.
+
+Usage Guide
+
+Generate traces: paver capture -d traceDir
+Process traces for detection: paver process
+Run detectors: paver detect
+Display scores: paver score

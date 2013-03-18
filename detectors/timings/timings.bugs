@@ -1,0 +1,12 @@
+model
+{
+  for (i in 1:N)
+  {
+    # Poisson likelihood
+    timings[i] ~ dpois(rate)
+    timings.rep[i] ~ dpois(rate)
+  }
+
+  # Gamma prior
+  rate ~ dgamma(0.01, 0.01)
+}

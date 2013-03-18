@@ -1,0 +1,11 @@
+model
+{
+	strings[1:K] ~ dmulti(p[1:K], N)
+        strings.rep[1:K] ~ dmulti(p[1:K], N)
+	p[1:K] ~ ddirch(alpha[1:K])
+
+	for (i in 1:K)
+	{
+	  alpha[i] <- 1 / K
+	}
+}

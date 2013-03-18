@@ -1,0 +1,11 @@
+model clear
+data clear
+model in "timings.bugs"
+data in "data.txt"
+compile
+inits in "initial_1.txt"
+initialize
+update 1000
+monitor timings.rep
+update 1000
+coda *

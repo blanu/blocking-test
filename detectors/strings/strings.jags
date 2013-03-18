@@ -1,0 +1,11 @@
+model clear
+data clear
+model in "strings.bugs"
+data in "data.txt"
+compile
+inits in "initial_1.txt"
+initialize
+update 1000
+monitor strings.rep
+update 1000
+coda *

@@ -1,0 +1,12 @@
+model clear
+data clear
+model in "entropy.bugs"
+data in "data.txt"
+compile
+inits in "initial_1.txt"
+initialize
+update 1000
+monitor mu
+monitor sigma
+update 1000
+coda *

@@ -1,0 +1,3 @@
+".RNG.name" <- "base::Super-Duper"
+".RNG.seed" <- 12
+

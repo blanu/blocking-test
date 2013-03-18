@@ -1,0 +1,15 @@
+model
+{
+        # Multinomial likelihood
+	lengths[1:K] ~ dmulti(p[1:K], N)
+        lengths.rep[1:K] ~ dmulti(p[1:K], N)
+
+        # Dirichlet prior
+	p[1:K] ~ ddirch(alpha[1:K])
+
+        # Equal probabilities for all possibilities in prior
+	for (i in 1:K)
+	{
+	  alpha[i] <- 1 / K
+	}
+}
