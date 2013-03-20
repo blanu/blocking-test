@@ -23,6 +23,7 @@ class CaptureDevice:
     self.thread.start()
 
   def run(self):
+    print('Sniffing on '+str(self.iface))
     sniff(iface=self.iface, prn=self.process)
 
   def process(self, packet):

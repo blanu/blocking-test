@@ -1,9 +1,0 @@
-ERROR:root:py-obfsproxy CLI loaded
-ERROR:root:argv: ['/home/brandon/py-obfsproxy/src/cli.py', '--log-file=/home/brandon/py-obfsproxy/pyobfslog-bridge.out', '--managed']
-ERROR:root:file logging: /home/brandon/py-obfsproxy/pyobfslog-bridge.out False
-ERROR:root:py-obfsproxy CLI loaded
-ERROR:root:argv: ['/home/brandon/py-obfsproxy/src/cli.py', '--log-file=/home/brandon/py-obfsproxy/pyobfslog-bridge.out', '--managed']
-ERROR:root:file logging: /home/brandon/py-obfsproxy/pyobfslog-bridge.out False
-ERROR:root:py-obfsproxy CLI loaded
-ERROR:root:argv: ['/home/brandon/py-obfsproxy/src/cli.py', '--log-file=/home/brandon/py-obfsproxy/pyobfslog-bridge.out', '--managed']
-ERROR:root:file logging: /home/brandon/py-obfsproxy/pyobfslog-bridge.out False
