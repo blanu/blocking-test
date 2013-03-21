@@ -44,6 +44,10 @@ options(
   )
 )
 
+def timestamp():
+  import datetime, time
+  return str(int(time.mktime(datetime.datetime.now().timetuple())))
+
 # Capture HTTPS, HTTP-Tor-obfs2, and HTTP-Tor-Dust traffic into traces in the specified directory
 @task
 @cmdopts([
@@ -120,7 +124,7 @@ def capture_https(options):
   captureDevice=options.capture_https.captureDevice
 
   sh('touch CAPTURE_RUNNING')
-  sh('sudo src/capture.py '+captureDevice+' '+str(traceDir)+'/https.pcap &')
+  sh('sudo src/capture.py '+captureDevice+' '+str(traceDir)+'/https-'+timestamp()+'.pcap &')
 
   call_task('generate_https')
 

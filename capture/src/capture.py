@@ -24,7 +24,10 @@ class CaptureDevice:
 
   def run(self):
     print('Sniffing on '+str(self.iface))
-    sniff(iface=self.iface, prn=self.process)
+    try:
+      sniff(iface=self.iface, prn=self.process)
+    except:
+      pass
 
   def process(self, packet):
     if self.finished:
@@ -43,5 +46,8 @@ if __name__=='__main__':
   cap=CaptureDevice(sys.argv[1], sys.argv[2])
   cap.start()
   while os.path.exists('CAPTURE_RUNNING'):
-    time.sleep(10)
+    try:
+      time.sleep(10)
+    except:
+      break
   cap.end()

@@ -7,7 +7,7 @@
 import time
 import unittest
 
-from selenium import webdriver
+import webdriverplus as webdriver
 
 # Generate obfs2-encoded Tor traffic
 class TorTests(unittest.TestCase):
@@ -65,9 +65,10 @@ class DustTests(unittest.TestCase):
 class HttpsTests(unittest.TestCase):
   # Make sure that no proxy is set
   def setUp(self):
-    profile=webdriver.FirefoxProfile()
-    profile.set_preference('network.proxy.type', 0)
-    self.browser=webdriver.Firefox(profile)
+#    profile=webdriver.FirefoxProfile()
+#    profile.set_preference('network.proxy.type', 0)
+#    self.browser=webdriver.Firefox(profile)
+    self.browser=webdriver.WebDriver()
 
   def test_google(self):
     self.browser.get('https://encrypted.google.com/')
