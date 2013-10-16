@@ -36,3 +36,6 @@ traces/test3
 .Rhistory
 nohup.out
 detectors/snort
+capture/CAPTURE_RUNNING
+capture/traces/
+capture/build

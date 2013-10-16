@@ -49,3 +49,4 @@ from tasks.generating import *
 from tasks.encoding import *
 from tasks.capturing import *
 from tasks.cleaning import *
+from tasks.testing import *
