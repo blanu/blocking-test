@@ -8,14 +8,22 @@ import shutil
 from paver.easy import *
 from paver.path import *
 
+from capturing import timestamp
+
 sys.path.append(os.path.abspath('.'))
+
+# Dependencies:
+# - ping
+# - traceroute
+# - nmap
 
 # Options required by different tasks
 options(
   # Capture configuration
   testing=Bunch(
     traceDir='traces',
-    traceHost='internews.org'
+    traceHost='internews.org',
+    captureDevice='eth0'
   )
 )
 
@@ -23,6 +31,8 @@ options(
 def all(options):
   call_task('traceroute')
   call_task('ping')
+  call_task('nmap')
+  call_task('postprocess')
 
 # Record traceroute to server
 @task
@@ -44,84 +54,61 @@ def ping(options):
   time.sleep(60)
   sh('killall ping')
 
-# Generate HTTP over Tor over obfs2 traffic
+# Check which ports are open on the testing server
 @task
-def generate_tor_dust(options):
-  call_task('run_tor_with_dust')
+def nmap(options):
+  traceDir=options.testing.traceDir
+  if not os.path.exists(traceDir):
+    os.mkdir(traceDir)
+  sh("sudo nmap %s 2>&1 | tee %s/nmap.txt" % (options.testing.traceHost, traceDir))
 
-  sh('nosetests generate:TorTests')
-
-  call_task('kill_fab')
-  call_task('kill_tor')
-
-# Generate HTTP over Tor over obfs2 traffic
+# Package the results for sending
 @task
-def generate_http_dust(options):
-  call_task('run_dust')
+def postprocess(options):
+  traceDir=options.testing.traceDir
+  if not os.path.exists(traceDir):
+    print('No results found to postprocess')
+  else:
+    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*" % (traceDir))
 
-  sh('nosetests generate:DustTests')
-
-  call_task('kill_fab')
-  call_task('kill_dust')
+# Generate HTTP
+@task
+def generate_http(options):
+  traceDir=options.generate.traceDir
+  sh("nosetests generate:HttpTests 2>&1 | tee %s/generate-http.txt" % (traceDir))
 
 # Generate HTTPS traffic
 @task
 def generate_https(options):
-  sh('nosetests generate:HttpsTests')
+  traceDir=options.generate.traceDir
+  sh("nosetests generate:HttpsTests 2>&1 | tee %s/generate-https.txt" % (traceDir))
 
-# Run a local Tor client and a remote Tor bridge, both configured to use a obfs2 encoder
+# Capture HTTP traffic into traces in the specified directory
 @task
-def run_tor_with_obfs2(options):
-  call_task('run_remote_tor_bridge')
-  time.sleep(10)
-  call_task('run_local_tor_client_with_obfs2')
-  time.sleep(10)
+@cmdopts([
+  ('traceDir=', 'd', 'Directory in which to output traces'),
+  ('captureDevice=', 'c', 'Device to use for capturing traces')
+])
+def capture_http(options):
+  capture(options.testing.traceDir, options.testing.captureDevice, 'http')
 
-# Run a local Tor client and a remote Tor bridge, both configured to use a Dust encoder
+# Capture HTTPS traffic into traces in the specified directory
 @task
-def run_tor_with_dust(options):
-  call_task('run_remote_tor_bridge')
-  time.sleep(10)
-  call_task('run_local_tor_client_with_dust')
-  time.sleep(10)
+@cmdopts([
+  ('traceDir=', 'd', 'Directory in which to output traces'),
+  ('captureDevice=', 'c', 'Device to use for capturing traces')
+])
+def capture_https(options):
+  capture(options.testing.traceDir, options.testing.captureDevice, 'https')
 
-# Run the Tor client on a remote machine, configured to use obfs2
-@task
-def run_local_tor_bridge(options):
-  sh('nohup deps/tor/bin/tor -f etc/torrc_bridge &')
+def capture(traceDir, captureDevice, target):
+  if not os.path.exists(traceDir):
+    os.mkdir(traceDir)
 
-# Run the Tor client on the local machine, configured to use obfs2
-@task
-def run_local_tor_client_with_obfs2(options):
-  sh('nohup deps/tor/bin/tor -f etc/torrc_client_obfs2 &')
+  sh('touch CAPTURE_RUNNING')
+  sh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
 
-# Run the Tor client on the local machine, configured to use Dust
-@task
-def run_local_tor_client_with_dust(options):
-  sh('nohup deps/tor/bin/tor -f etc/torrc_client_dust &')
+  call_task("generate_%s" % (target))
 
-# Run the Tor bridge on a remote machine, configured to use obfs2
-@task
-def run_remote_tor_bridge(options):
-  sh('fab -H blanu@blanu.net run_tor_bridge &')
-
-# Kill all Tor processes, both local and remote
-@task
-def kill_tor(options):
-  call_task('kill_local_tor')
-  call_task('kill_remote_tor')
-
-# Kill Fabric processes running on thelocal machine
-@task
-def kill_fab(options):
-  sh('killall fab')
-
-# Kill Tor processes running on the local machine
-@task
-def kill_local_tor(options):
-  sh('killall tor')
-
-# Kill Tor processes running on a remote machine
-@task
-def kill_remote_tor(options):
-  sh('fab -H blanu@blanu.net kill_tor')
+  sh('rm CAPTURE_RUNNING')
+  time.sleep(11)

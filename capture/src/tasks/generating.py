@@ -10,6 +10,13 @@ from paver.path import *
 
 sys.path.append(os.path.abspath('.'))
 
+options(
+  # Capture configuration
+  generate=Bunch(
+    traceDir='traces',
+  )
+)
+
 # Generate HTTP over Tor over obfs2 traffic
 @task
 def generate_tor_obfs2(options):
@@ -19,31 +26,6 @@ def generate_tor_obfs2(options):
 
   call_task('kill_fab')
   call_task('kill_tor')
-
-# Generate HTTP over Tor over obfs2 traffic
-@task
-def generate_tor_dust(options):
-  call_task('run_tor_with_dust')
-
-  sh('nosetests generate:TorTests')
-
-  call_task('kill_fab')
-  call_task('kill_tor')
-
-# Generate HTTP over Tor over obfs2 traffic
-@task
-def generate_http_dust(options):
-  call_task('run_dust')
-
-  sh('nosetests generate:DustTests')
-
-  call_task('kill_fab')
-  call_task('kill_dust')
-
-# Generate HTTPS traffic
-@task
-def generate_https(options):
-  sh('nosetests generate:HttpsTests')
 
 # Run a local Tor client and a remote Tor bridge, both configured to use a obfs2 encoder
 @task

@@ -9,7 +9,7 @@ import unittest
 
 import webdriverplus as webdriver
 
-# Generate obfs2-encoded Tor traffic
+# Generate Tor traffic
 class TorTests(unittest.TestCase):
   # Set Firefox to use an encoder as a SOCKS proxy
   def setUp(self):
@@ -35,15 +35,11 @@ class TorTests(unittest.TestCase):
   def tearDown(self):
     self.browser.quit()
 
-# Generate Dust-encoded HTTP traffic
-class DustTests(unittest.TestCase):
+# Generate HTTP traffic
+class HttpTests(unittest.TestCase):
   # Set Firefox to use an encoder as a SOCKS proxy
   def setUp(self):
-    profile=webdriver.FirefoxProfile()
-    profile.set_preference('network.proxy.type', 1)
-    profile.set_preference('network.proxy.socks', '127.0.0.1') # This double quoting is actually correct. It works around a bug in Selenium.
-    profile.set_preference('network.proxy.socks_port', 7050)
-    self.browser=webdriver.Firefox(profile)
+    self.browser=webdriver.WebDriver()
 
   def test_rwb(self):
     self.browser.get('http://en.rsf.org/')
@@ -57,6 +53,22 @@ class DustTests(unittest.TestCase):
     self.browser.get('http://www.eff.org/')
   def test_torproject(self):
     self.browser.get('http://www.torproject.org/')
+  def test_voa(self):
+    self.browser.get('http://www.voanews.org/')
+  def test_bbc(self):
+    self.browser.get('http://www.bbc.co.uk/')
+  def test_google(self):
+    self.browser.get('http://google.com/')
+  def test_youtube(self):
+    self.browser.get('http://youtube.com/')
+  def test_tor2web(self):
+    self.browser.get('http://tor2web.org/')
+  def test_hideme(self):
+    self.browser.get('http://hideme.be/')
+  def test_cgiproxy(self):
+    self.browser.get('http://jmarshall.com/tools/cgiproxy')
+  def test_repress(self):
+    self.browser.get('http://wordpress.org/plugins/repress/')
 
   def tearDown(self):
     self.browser.quit()

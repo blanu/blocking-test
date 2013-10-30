@@ -27,6 +27,11 @@ options(
         # default trace directory
         traceDir='traces/test',
         captureDevice='eth1'
+      ),
+      capture_http=Bunch(
+        # default trace directory
+        traceDir='traces/test',
+        captureDevice='eth1'
       )
     )
   ),
@@ -107,6 +112,26 @@ def capture_dust(options):
   call_task('generate_http_dust')
 
   call_task('kill_dust')
+
+  sh('rm CAPTURE_RUNNING')
+  time.sleep(11)
+
+# Capture HTTP traffic into traces in the specified directory
+@task
+@cmdopts([
+  ('traceDir=', 'd', 'Directory in which to output traces'),
+  ('captureDevice=', 'c', 'Device to use for capturing traces')
+])
+def capture_http(options):
+  traceDir=options.capture_http.traceDir
+  if not os.path.exists(traceDir):
+    os.mkdir(traceDir)
+  captureDevice=options.capture_http.captureDevice
+
+  sh('touch CAPTURE_RUNNING')
+  sh('sudo src/capture.py '+captureDevice+' '+str(traceDir)+'/http-'+timestamp()+'.pcap &')
+
+  call_task('generate_http')
 
   sh('rm CAPTURE_RUNNING')
   time.sleep(11)
