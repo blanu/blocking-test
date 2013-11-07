@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Update blocking-test
+Name[en_US]=Update blocking-test
+Icon=reboot-notifier
+Exec=xterm -e ~/blocking-test/scripts/update.sh
+Comment[en_US]=

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Install blocking-test
+Name[en_US]=Install blocking-test
+Icon=gnome-app-install
+Exec=xterm -e wget -O - http://blanu.net/install-bt.sh | sh
+Comment[en_US]=
