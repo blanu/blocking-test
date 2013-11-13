@@ -1,4 +1,4 @@
-apt-get install git-core
+sudo apt-get install git-core
 git clone https://github.com/blanu/blocking-test
 cd blocking-test
 scripts/install.sh
