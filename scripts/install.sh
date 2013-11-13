@@ -6,6 +6,5 @@ sudo apt-get install python-scapy
 sudo pip install paver
 sudo pip install webdriverplus
 
-cd ~/blocking-test/
 sudo cp scripts/Run /usr/share/applications
-cp scripts/Update /usr/share/applications
+sudo cp scripts/Update /usr/share/applications
