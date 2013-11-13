@@ -41,7 +41,7 @@ def traceroute(options):
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
   sh("(date; ifconfig; traceroute %s 2>&1 | tee %s/traceroute.txt) &" % (options.testing.traceHost, traceDir))
-  time.sleep(180)
+  time.sleep(30)
   sh('killall traceroute')
 
 # Record ping to server
