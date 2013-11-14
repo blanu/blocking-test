@@ -1,4 +1,16 @@
+To install, open a terminal and enter:
+
 sudo apt-get install git-core
 git clone https://github.com/blanu/blocking-test
 cd blocking-test
 scripts/install.sh
+
+To run the tests, open a terminal and enter:
+
+cd blocking-test
+paver all
+
+To update to the newest version, open a terminal and enter:
+
+cd blocking-test
+git pull origin master
