@@ -22,17 +22,25 @@ options(
   # Capture configuration
   testing=Bunch(
     traceDir='traces',
-    traceHost='internews.org',
+    traceHost='blanu.net',
     captureDevice='eth0'
   )
 )
 
 @task
 def all(options):
-  call_task('traceroute')
-  call_task('ping')
-  call_task('nmap')
-  call_task('postprocess')
+  safe_task('traceroute', options)
+  safe_task('ping', options)
+  safe_task('nmap', options)
+  safe_task('capture_http', options)
+  safe_task('capture_https', options)
+  safe_task('postprocess', options)
+
+def safe_task(name, options):
+  try:
+    call_task(name)
+  except e:
+    print("Error running task %s: %s" % (name, str(e)))
 
 # Record traceroute to server
 @task
@@ -69,7 +77,7 @@ def postprocess(options):
   if not os.path.exists(traceDir):
     print('No results found to postprocess')
   else:
-    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*" % (traceDir))
+    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*; scp $FILENAME.zip %s:$FILENAME.zip; echo \"A file called $FILENAME.zip has been created. Please email this file to brandon@blanu.net.\"" % (traceDir, options.testing.traceHost))
 
 # Generate HTTP
 @task

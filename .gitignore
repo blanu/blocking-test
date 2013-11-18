@@ -39,3 +39,4 @@ detectors/snort
 capture/CAPTURE_RUNNING
 capture/traces/
 capture/build
+capture/*.zip
