@@ -22,7 +22,7 @@ options(
   # Capture configuration
   testing=Bunch(
     traceDir='traces',
-    traceHost='blanu.net',
+    traceHost='162.209.102.232',
     captureDevice='eth0'
   )
 )
