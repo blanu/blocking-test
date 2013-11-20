@@ -77,7 +77,7 @@ def postprocess(options):
   if not os.path.exists(traceDir):
     print('No results found to postprocess')
   else:
-    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*; scp $FILENAME.zip %s:$FILENAME.zip; echo \"A file called $FILENAME.zip has been created. Please email this file to brandon@blanu.net.\"" % (traceDir, options.testing.traceHost))
+    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*; scp $FILENAME.zip against@%s:$FILENAME.zip; echo \"A file called $FILENAME.zip has been created. Please email this file to brandon@blanu.net.\"" % (traceDir, options.testing.traceHost))
 
 # Generate HTTP
 @task
