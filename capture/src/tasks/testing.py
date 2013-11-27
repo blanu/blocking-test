@@ -22,7 +22,7 @@ options(
   # Capture configuration
   testing=Bunch(
     traceDir='traces',
-    traceHost='internews.org',
+    traceHost='blanu.net',
     captureDevice='eth0'
   )
 )
@@ -74,13 +74,13 @@ def postprocess(options):
 # Generate HTTP
 @task
 def generate_http(options):
-  traceDir=options.generate.traceDir
+  traceDir=options.testing.traceDir
   sh("nosetests generate:HttpTests 2>&1 | tee %s/generate-http.txt" % (traceDir))
 
 # Generate HTTPS traffic
 @task
 def generate_https(options):
-  traceDir=options.generate.traceDir
+  traceDir=options.testing.traceDir
   sh("nosetests generate:HttpsTests 2>&1 | tee %s/generate-https.txt" % (traceDir))
 
 # Capture HTTP traffic into traces in the specified directory
@@ -112,3 +112,19 @@ def capture(traceDir, captureDevice, target):
 
   sh('rm CAPTURE_RUNNING')
   time.sleep(11)
+
+# Test SSH
+@task
+def ssh(options):
+  if os.path.exists('ssh-testfile.txt'):
+    os.delete('ssh-testfile.txt')
+  try:
+    sh("scp brandon@%s:testfile.txt testfile.txt 2>&1 | tee %s/ssh-results.txt" % (options.testing.traceHost, options.testing.traceDir))
+  except:
+    pass
+  if os.path.exists('ssh-testfile.txt'):
+    print('SSH SUCCESS')
+    os.delete('ssh-testfile.txt')
+  else:
+    print('SSH FAILURE')
+
