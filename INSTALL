@@ -1,19 +1,16 @@
-Requirements
+To install, open a terminal and enter:
 
-- git
-- python 2.6
-- virtualenv
-- tcpdump is required to generate new traces
-- autoconf, libtool, make, gcc, and libevent 2.0 are required to build obfsproxy
-- cmake is required to build sniffjoke
-- R with coda package (r-cran-coda) and jags are required to run detectors
+sudo apt-get install git-core
+git clone https://github.com/blanu/blocking-test
+cd blocking-test
+scripts/install.sh
 
-Installation
+To run the tests, open a terminal and enter:
 
-Run ./bootstrap.py to set up the virtualenv and run "paver prepare".
-To activate the virtualenv, run "source bin/activate".
-Run paver tasks. Use "paver help" to see the full list of tasks.
-  To start with, try "paver capture" to generate some traces.
-To deactivate the virtualenv, run "deactivate".
+cd blocking-test/capture
+paver all
 
-The virtualenv contains paver and all of the necessary python libraries.
+To update to the newest version, open a terminal and enter:
+
+cd blocking-test
+scripts/update.sh
