@@ -39,7 +39,7 @@ def all(options):
 def safe_task(name, options):
   try:
     call_task(name)
-  except e:
+  except Exception, e:
     print("Error running task %s: %s" % (name, str(e)))
 
 # Record traceroute to server

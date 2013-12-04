@@ -6,3 +6,6 @@ sudo apt-get install python-scapy
 sudo apt-get install firefox
 sudo pip install paver
 sudo pip install webdriverplus
+scripts/install-threefish.sh
+cabal install Dust
+cabal install Dust-tools
