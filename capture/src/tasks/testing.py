@@ -4,6 +4,7 @@ import glob
 import time
 import json
 import shutil
+import thread
 
 from paver.easy import *
 from paver.path import *
@@ -37,10 +38,16 @@ def all(options):
   safe_task('postprocess', options)
 
 def safe_task(name, options):
+  print("Execuring task %s. Please wait." % (name))
   try:
     call_task(name)
-  except e:
+    print("Task %s completed successfully" % (name))
+  except Exception, e:
     print("Error running task %s: %s" % (name, str(e)))
+  print('')
+
+def qsh(command):
+  sh(command+' >>traces/tasklog.txt')
 
 # Record traceroute to server
 @task
@@ -48,9 +55,9 @@ def traceroute(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
-  sh("(date; ifconfig; traceroute %s 2>&1 | tee %s/traceroute.txt) &" % (options.testing.traceHost, traceDir))
+  sh("(date; ifconfig; traceroute %s 2>&1 | tee %s/traceroute.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
   time.sleep(30)
-  sh('killall traceroute')
+  qsh('killall traceroute')
 
 # Record ping to server
 @task
@@ -58,9 +65,9 @@ def ping(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
-  sh("(date; ifconfig; ping %s 2>&1 | tee %s/ping.txt) &" % (options.testing.traceHost, traceDir))
+  sh("(date; ifconfig; ping %s 2>&1 | tee %s/ping.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
   time.sleep(60)
-  sh('killall ping')
+  qsh('killall ping')
 
 # Check which ports are open on the testing server
 @task
@@ -68,7 +75,7 @@ def nmap(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
-  sh("sudo nmap %s 2>&1 | tee %s/nmap.txt" % (options.testing.traceHost, traceDir))
+  qsh("sudo nmap %s 2>&1 | tee %s/nmap.txt" % (options.testing.traceHost, traceDir))
 
 # Package the results for sending
 @task
@@ -77,19 +84,19 @@ def postprocess(options):
   if not os.path.exists(traceDir):
     print('No results found to postprocess')
   else:
-    sh("FILENAME=`date '+%%s'`; zip -9 $FILENAME %s/*; scp $FILENAME.zip against@%s:$FILENAME.zip; echo \"A file called $FILENAME.zip has been created. Please email this file to brandon@blanu.net.\"" % (traceDir, options.testing.traceHost))
+    qsh("TRACES=%s; FILENAME=`date '+%%s'`; LOCALPATH=$HOME/Desktop/$FILENAME; zip -9 $LOCALPATH $TRACES/*; scp $LOCALPATH.zip against@%s:$FILENAME.zip; echo \"A file called $LOCALPATH.zip has been created.\"; rm $TRACES/*" % (traceDir, options.testing.traceHost))
 
 # Generate HTTP
 @task
 def generate_http(options):
   traceDir=options.testing.traceDir
-  sh("nosetests generate:HttpTests 2>&1 | tee %s/generate-http.txt" % (traceDir))
+  qsh("nosetests generate:HttpTests 2>&1 | tee %s/generate-http.txt" % (traceDir))
 
 # Generate HTTPS traffic
 @task
 def generate_https(options):
   traceDir=options.testing.traceDir
-  sh("nosetests generate:HttpsTests 2>&1 | tee %s/generate-https.txt" % (traceDir))
+  qsh("nosetests generate:HttpsTests 2>&1 | tee %s/generate-https.txt" % (traceDir))
 
 # Capture HTTP traffic into traces in the specified directory
 @task
@@ -113,12 +120,12 @@ def capture(traceDir, captureDevice, target):
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
 
-  sh('touch CAPTURE_RUNNING')
-  sh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
+  qsh('touch CAPTURE_RUNNING')
+  qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
 
   call_task("generate_%s" % (target))
 
-  sh('rm CAPTURE_RUNNING')
+  qsh('rm CAPTURE_RUNNING')
   time.sleep(11)
 
 # Test SSH
@@ -127,7 +134,7 @@ def ssh(options):
   if os.path.exists('ssh-testfile.txt'):
     os.delete('ssh-testfile.txt')
   try:
-    sh("scp brandon@%s:testfile.txt testfile.txt 2>&1 | tee %s/ssh-results.txt" % (options.testing.traceHost, options.testing.traceDir))
+    qsh("scp brandon@%s:testfile.txt testfile.txt 2>&1 | tee %s/ssh-results.txt" % (options.testing.traceHost, options.testing.traceDir))
   except:
     pass
   if os.path.exists('ssh-testfile.txt'):
@@ -135,4 +142,3 @@ def ssh(options):
     os.delete('ssh-testfile.txt')
   else:
     print('SSH FAILURE')
-
