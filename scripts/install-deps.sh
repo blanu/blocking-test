@@ -7,4 +7,6 @@ sudo apt-get install firefox
 sudo apt-get install haskell-platform
 sudo pip install paver
 sudo pip install webdriverplus
+scripts/install-threefish.sh
+cabal install Dust
 cabal install Dust-tools

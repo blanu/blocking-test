@@ -41,7 +41,10 @@ def safe_task(name, options):
   print("Execuring task %s. Please wait." % (name))
   try:
     call_task(name)
+<<<<<<< HEAD
     print("Task %s completed successfully" % (name))
+=======
+>>>>>>> 63daa22ddc8dbf1e594f1393b0015967e9506f34
   except Exception, e:
     print("Error running task %s: %s" % (name, str(e)))
   print('')
