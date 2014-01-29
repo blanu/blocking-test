@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Icon[en_US]=web-browser
+Name[en_US]=Run blocking-test
+Exec=gnome-terminal -x /home/bt2/blocking-test/scripts/capture.sh
+Name=Run blocking-test
+Icon=web-browser

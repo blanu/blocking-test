@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Icon[en_US]=reboot-notifier
+Name[en_US]=Update blocking-test
+Exec=gnome-terminal -x /home/bt2/blocking-test/scripts/update.sh
+Name=Update blocking-test
+Icon=reboot-notifier
