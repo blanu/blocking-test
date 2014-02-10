@@ -190,8 +190,12 @@ def kill_dust_replay_http(options):
 
 @task
 def kill_remote_dust_replay_http_server(options):
-  sh('fab -f src/fabfile.py -H blanu@blanu.net kill_dust_replay_http_server')
+  sh('fab -f src/fabfile.py -H against@162.209.102.232 kill_dust_replay_http_server')
 
 @task
 def kill_local_dust_replay_http_client(options):
   sh('killall replay-client')
+
+@task
+def kill_local_dust_replay_http_server(options):
+  sh('killall replay-server')
