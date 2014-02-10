@@ -129,6 +129,26 @@ def capture(traceDir, captureDevice, target):
   qsh('rm CAPTURE_RUNNING')
   time.sleep(11)
 
+def capture_dust_replay_http(traceDir, captureDevice, target):
+  if not os.path.exists(traceDir):
+    os.mkdir(traceDir)
+
+  qsh('touch CAPTURE_RUNNING')
+  qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
+
+  call_task("generate_dust_replay_http")
+
+  qsh('rm CAPTURE_RUNNING')
+  time.sleep(11)
+
+@task
+def generate_dust_replay_http(options):
+  call_task('replay_http')
+
+  time.sleep(30)
+
+  call_task('kill_dust_replay_http')
+
 # Test SSH
 @task
 def ssh(options):
