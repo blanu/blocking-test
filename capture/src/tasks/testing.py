@@ -35,6 +35,7 @@ def all(options):
   safe_task('nmap', options)
   safe_task('capture_http', options)
   safe_task('capture_https', options)
+  safe_task('replay_http', options)
   safe_task('postprocess', options)
 
 def safe_task(name, options):
@@ -142,3 +143,35 @@ def ssh(options):
     os.delete('ssh-testfile.txt')
   else:
     print('SSH FAILURE')
+
+@task
+def replay_http(options):
+  call_task('run_remote_dust_replay_http_server')
+  time.sleep(5)
+  call_task('run_local_dust_replay_http_client')
+  time.sleep(5)
+
+@task
+def run_remote_dust_replay_http_server(options):
+  sh('fab -f src/fabfile.py -H against@162.209.102.232 run_dust_replay_http_server &')
+
+@task
+def run_local_dust_replay_http_server(options):
+  sh('~/.cabal/bin/replay-server models/http.ps &')
+
+@task
+def run_local_dust_replay_http_client(options):
+  sh('~/.cabal/bin/replay-client models/http.ps &')
+
+@task
+def kill_dust_replay_http(options):
+  call_task('kill_local_dust_replay_http_client')
+  call_task('kill_remote_dust_replay_http_server')
+
+@task
+def kill_remote_dust_replay_http_server(options):
+  sh('fab -f src/fabfile.py -H blanu@blanu.net kill_dust_replay_http_server')
+
+@task
+def kill_local_dust_replay_http_client(options):
+  sh('killall replay-client')

@@ -63,3 +63,14 @@ def kill_tor():
   with cd('blocking-test'):
     run('git pull origin master')
     run('paver kill_local_tor')
+
+def run_dust_replay_http_server():
+  with cd('blocking-test/capture'):
+    run('git pull origin master')
+    run('paver run_local_dust_replay_http_server')
+
+# Kill Dust server
+def kill_dust_replay_http_server():
+  with cd('blocking-test/capture'):
+    run('git pull origin master')
+    run('paver kill_local_dust_replay_http_server')
