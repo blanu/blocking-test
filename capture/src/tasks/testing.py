@@ -24,7 +24,7 @@ options(
   testing=Bunch(
     traceDir='traces',
     traceHost='162.209.102.232',
-    captureDevice='eth1'
+    captureDevice='wlan1'
   )
 )
 
