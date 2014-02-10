@@ -129,23 +129,15 @@ def capture(traceDir, captureDevice, target):
   qsh('rm CAPTURE_RUNNING')
   time.sleep(11)
 
-def capture_dust_replay_http(traceDir, captureDevice, target):
-  if not os.path.exists(traceDir):
-    os.mkdir(traceDir)
-
-  qsh('touch CAPTURE_RUNNING')
-  qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
-
-  safe_task("generate_dust_replay_http", None)
-
-  qsh('rm CAPTURE_RUNNING')
-  time.sleep(11)
+@task
+def capture_dust_replay_http(options):
+  capture(options.testing.traceDir, options.testing.captureDevice, 'dust_replay_http')
 
 @task
 def generate_dust_replay_http(options):
   safe_task('replay_http', options)
 
-  time.sleep(30)
+  time.sleep(60)
 
   safe_task('kill_dust_replay_http', options)
 
@@ -181,7 +173,7 @@ def run_local_dust_replay_http_server(options):
 
 @task
 def run_local_dust_replay_http_client(options):
-  sh('~/.cabal/bin/replay-client models/http.ps &')
+  sh('~/Dust-tools/dist/build/replay-client/replay-client models/http.ps')
 
 @task
 def kill_dust_replay_http(options):
