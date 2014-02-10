@@ -124,7 +124,7 @@ def capture(traceDir, captureDevice, target):
   qsh('touch CAPTURE_RUNNING')
   qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
 
-  call_task("generate_%s" % (target))
+  safe_task("generate_%s" % (target), None)
 
   qsh('rm CAPTURE_RUNNING')
   time.sleep(11)
@@ -136,18 +136,18 @@ def capture_dust_replay_http(traceDir, captureDevice, target):
   qsh('touch CAPTURE_RUNNING')
   qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))
 
-  call_task("generate_dust_replay_http")
+  safe_task("generate_dust_replay_http", None)
 
   qsh('rm CAPTURE_RUNNING')
   time.sleep(11)
 
 @task
 def generate_dust_replay_http(options):
-  call_task('replay_http')
+  safe_task('replay_http', options)
 
   time.sleep(30)
 
-  call_task('kill_dust_replay_http')
+  safe_task('kill_dust_replay_http', options)
 
 # Test SSH
 @task
@@ -166,9 +166,9 @@ def ssh(options):
 
 @task
 def replay_http(options):
-  call_task('run_remote_dust_replay_http_server')
+  safe_task('run_remote_dust_replay_http_server', options)
   time.sleep(5)
-  call_task('run_local_dust_replay_http_client')
+  safe_task('run_local_dust_replay_http_client', options)
   time.sleep(5)
 
 @task
@@ -177,7 +177,7 @@ def run_remote_dust_replay_http_server(options):
 
 @task
 def run_local_dust_replay_http_server(options):
-  sh('~/.cabal/bin/replay-server models/http.ps &')
+  sh('nohup ~/.cabal/bin/replay-server models/http.ps &')
 
 @task
 def run_local_dust_replay_http_client(options):
@@ -185,8 +185,8 @@ def run_local_dust_replay_http_client(options):
 
 @task
 def kill_dust_replay_http(options):
-  call_task('kill_local_dust_replay_http_client')
-  call_task('kill_remote_dust_replay_http_server')
+  safe_task('kill_local_dust_replay_http_client', options)
+  safe_task('kill_remote_dust_replay_http_server', options)
 
 @task
 def kill_remote_dust_replay_http_server(options):
