@@ -11,7 +11,7 @@ import os
 from fabric.api import cd, run
 
 # Bootstrap by installing blocking-test source, updating to latest version, and running bootstrap.py
-def bootstrap():
+#def bootstrap():
 #  if run('test -d blocking-test').failed:
 #    run('git clone https://gitweb.torproject.org/user/blanu/blocking-test.git')
 #  with cd('blocking-test'):
