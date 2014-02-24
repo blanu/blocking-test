@@ -30,6 +30,7 @@ options(
 
 @task
 def all(options):
+  safe_task('configure', options)
   safe_task('traceroute', options)
   safe_task('ping', options)
   safe_task('nmap', options)
@@ -49,6 +50,18 @@ def safe_task(name, options):
 
 def qsh(command):
   sh(command+' >>traces/tasklog.txt')
+
+@task
+def configure(options):
+  country=raw_input("Enter the country where you are conducting this test: ")
+  network=raw_input("Enter the type of network (home, business, academic, etc.): ")
+  traceDir=options.testing.traceDir
+  if not os.path.exists(traceDir):
+    os.mkdir(traceDir)
+  f=open(traceDir+'/options.config', 'w')
+  f.write(country+"\n")
+  f.write(network+"\n")
+  f.close()
 
 # Record traceroute to server
 @task
@@ -78,6 +91,13 @@ def nmap(options):
     os.mkdir(traceDir)
   qsh("sudo nmap %s 2>&1 | tee %s/nmap.txt" % (options.testing.traceHost, traceDir))
 
+def sanitize(s):
+  result=''
+  for letter in s.lower():
+    if letter>='a' and letter<='z':
+      result=result+letter
+  return result
+
 # Package the results for sending
 @task
 def postprocess(options):
@@ -85,7 +105,13 @@ def postprocess(options):
   if not os.path.exists(traceDir):
     print('No results found to postprocess')
   else:
-    qsh("TRACES=%s; FILENAME=`date '+%%s'`; LOCALPATH=$HOME/Desktop/$FILENAME; zip -9 $LOCALPATH $TRACES/*; scp $LOCALPATH.zip against@%s:$FILENAME.zip; echo \"A file called $LOCALPATH.zip has been created.\"; rm $TRACES/*" % (traceDir, options.testing.traceHost))
+    if os.path.exists(traceDir+'/options.config'):
+      f=open(traceDir+'/options.config')
+      country=sanitize(f.readline().strip())
+      network=f.readline().strip()
+      qsh("TRACES=%s; FILENAME=%s-`date '+%%s'`; LOCALPATH=$HOME/Desktop/$FILENAME; zip -9 $LOCALPATH $TRACES/*; scp $LOCALPATH.zip against@%s:$FILENAME.zip; echo \"A file called $LOCALPATH.zip has been created.\"; rm $TRACES/*" % (traceDir, country, options.testing.traceHost))
+    else:
+      qsh("TRACES=%s; FILENAME=`date '+%%s'`; LOCALPATH=$HOME/Desktop/$FILENAME; zip -9 $LOCALPATH $TRACES/*; scp $LOCALPATH.zip against@%s:$FILENAME.zip; echo \"A file called $LOCALPATH.zip has been created.\"; rm $TRACES/*" % (traceDir, options.testing.traceHost))
 
 # Generate HTTP
 @task
