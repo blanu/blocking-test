@@ -18,7 +18,7 @@ options(
   # Capture configuration
   capture=Bunch(
     traceDir='traces/test',
-    captureDevice='eth1'
+    captureDevice='wlan1'
   ),
   # Capture configuration for HTTPS
   task=Bunch(
@@ -26,12 +26,12 @@ options(
       capture_https=Bunch(
         # default trace directory
         traceDir='traces/test',
-        captureDevice='eth1'
+        captureDevice='wlan1'
       ),
       capture_http=Bunch(
         # default trace directory
         traceDir='traces/test',
-        captureDevice='eth1'
+        captureDevice='wlan1'
       )
     )
   ),
@@ -39,13 +39,13 @@ options(
   capture_obfsproxy=Bunch(
     # default trace directory
     traceDir='traces/test',
-    captureDevice='eth1'
+    captureDevice='wlan1'
   ),
   # Capture configuration for Dust
   capture_dust=Bunch(
     # default trace directory
     traceDir='traces/test',
-    captureDevice='eth1'
+    captureDevice='wlan1'
   )
 )
 
@@ -82,7 +82,7 @@ def capture_obfsproxy(options):
     os.mkdir(traceDir)
 
   sh('touch CAPTURE_RUNNING')
-  sh('sudo src/capture.py eth1 '+str(traceDir)+'/obfsproxy.pcap &')
+  sh('sudo src/capture.py wlan1 '+str(traceDir)+'/obfsproxy.pcap &')
 
   call_task('run_obfsproxy')
 

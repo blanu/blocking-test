@@ -24,7 +24,7 @@ options(
   testing=Bunch(
     traceDir='traces',
     traceHost='162.209.102.232',
-    captureDevice='eth1'
+    captureDevice='wlan1'
   )
 )
 
@@ -36,7 +36,7 @@ def all(options):
   safe_task('nmap', options)
   safe_task('capture_http', options)
   safe_task('capture_https', options)
-  safe_task('replay_http', options)
+  safe_task('capture_dust_replay_http', options)
   safe_task('postprocess', options)
 
 def safe_task(name, options):
