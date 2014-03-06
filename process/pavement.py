@@ -52,3 +52,4 @@ from tasks.processing import *
 from tasks.detecting import *
 from tasks.scoring import *
 from tasks.cleaning import *
+from tasks.testing import *
