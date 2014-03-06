@@ -8,7 +8,9 @@
 
 import os
 
-from fabric.api import cd, run
+from fabric.api import cd, run, env
+
+env.use_ssh_config = True
 
 # Bootstrap by installing blocking-test source, updating to latest version, and running bootstrap.py
 #def bootstrap():
