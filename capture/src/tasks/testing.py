@@ -40,7 +40,7 @@ def all(options):
   safe_task('postprocess', options)
 
 def safe_task(name, options):
-  print("Execuring task %s. Please wait." % (name))
+  print("Executing task %s. Please wait." % (name))
   try:
     call_task(name)
     print("Task %s completed successfully" % (name))
