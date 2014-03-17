@@ -12,7 +12,10 @@ sudo apt-get install libssl-dev libssl1.0.0
 #scripts/install-threefish.sh
 cabal install threefish
 pushd ~
-git clone https://github.com/blanu/Dust
+
+if [ ! -d "Dust" ]; then
+  git clone https://github.com/blanu/Dust
+fi
 cd Dust
 git pull origin master
 cd hs/Dust-crypto
@@ -22,7 +25,9 @@ cabal install
 popd
 
 pushd ~
-git clone https://github.com/blanu/Dust-tools
+if [ ! -d "Dust-tools" ]; then
+  git clone https://github.com/blanu/Dust-tools
+fi
 cd Dust-tools
 git pull origin master
 cabal install
