@@ -7,8 +7,8 @@ scripts/install.sh
 
 To run the tests, open a terminal and enter:
 
-cd blocking-test/capture
-paver all
+cd blocking-test
+scripts/capture.sh
 
 To update to the newest version, open a terminal and enter:
 
