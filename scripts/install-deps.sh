@@ -9,7 +9,9 @@ sudo pip install paver
 sudo pip install webdriverplus
 sudo pip install fabric
 sudo apt-get install libssl-dev libssl1.0.0
-#scripts/install-threefish.sh
+
+cabal update
+
 cabal install threefish
 pushd ~
 

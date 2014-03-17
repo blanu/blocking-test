@@ -1,179 +1,93 @@
 import os
+import sys
+import shutil
 
 from paver.easy import *
 from paver.path import *
+
+from sets import Set
 
 from util import load
 
 sys.path.append(os.path.abspath('.'))
 
+expectedPorts=Set([22, 25, 554, 3306, 5222, 5269, 5280, 7070, 7777])
+
+def safe_task(name, options):
+  print("Execuring task %s. Please wait." % (name))
+  try:
+    call_task(name)
+    print("Task %s completed successfully" % (name))
+  except Exception, e:
+    print("Error running task %s: %s" % (name, str(e)))
+  print('')
+
 @task
-def list(options):
-  sh('fab -f ../src/fabfile.py -H against@162.209.102.232 list')
+def all(options):
+  safe_task('nmap')
+  safe_task('compile', options)
+
+@task
+def ls(options):
+  sh('fab -f src/fabfile.py -H against@162.209.102.232 list')
 
 @task
 def update(options):
-  sh('fab -f ../src/fabfile.py -H against@162.209.102.232 update')
+  sh('fab -f src/fabfile.py -H against@162.209.102.232 update')
 
-# Combine the output of the various detectors into one combined output file.
 @task
-def combine(options):
-  if not os.path.exists('output'):
-    os.mkdir('output')
-  if os.path.exists('output/combined.csv'):
-    os.remove('output/combined.csv')
-  for detector in os.listdir('detectors'):
-    if os.path.exists('detectors/'+detector+'/output.csv'):
-      sh('cat detectors/'+detector+'/output.csv >>output/combined.csv')
+def sync(options):
+  sh('rsync -v -a --include "*.zip" --exclude "*" "against@162.209.102.232:." datasets')
 
-# Generate scores for encoders and detectors based on the combined output file
 @task
-@needs(['combine'])
-def score(options):
-  if not os.path.exists('output/combined.csv'):
+@consume_args
+def inspect(args):
+  f=args[0]
+  if os.path.exists('datasets/'+f+'.zip'):
+    if os.path.exists('traces'):
+      print('Removing traces')
+      shutil.rmtree('traces')
+    sh('unzip datasets/'+f+'.zip')
+    print('Writing dataset id')
+    wf=open('traces/dataset.id', 'w')
+    wf.write(f+"\n")
+    wf.close()
+  else:
+    print('Unknown dataset '+f)
+
+@task
+def nmap(options):
+  if os.path.exists('traces/dataset.id'):
+    f=open('traces/dataset.id')
+    setid=f.readline().strip()
+    f.close()
+  else:
+    print('Dataset has no id')
     return
-  if os.path.exists('output/results.csv'):
-    os.remove('output/results.csv')
-  data=load('output/combined.csv', False)
-  detectors={}
-  encoders={}
-  for row in data:
-    detector, tracename, d1, d2, d3, guess, answer, correct=row
-    if guess==answer:
-      if detector in detectors.keys():
-        stats=detectors[detector]
-        stats[0]=stats[0]+1
-        detectors[detector]=stats
-      else:
-        detectors[detector]=[1,0]
-      if answer in encoders.keys():
-        stats=encoders[answer]
-        stats[0]=stats[0]+1
-        encoders[answer]=stats
-      else:
-        encoders[answer]=[1,0,0]
+  if os.path.exists('traces/nmap.txt'):
+    f=open('traces/nmap.txt')
+    lines=f.readlines()[6:-2]
+    ports=Set(map(extractPort, lines))
+    blocked=list(expectedPorts.difference(ports))
+    if not os.path.exists('analysis'):
+      os.mkdir('analysis')
+    if not os.path.exists('analysis/'+setid):
+      os.mkdir('analysis/'+setid)
+    wf=open('analysis/%s/nmap' % (setid), 'w')
+    if len(blocked)==0:
+      wf.write("None")
     else:
-      if detector in detectors.keys():
-        stats=detectors[detector]
-        stats[1]=stats[1]+1
-        detectors[detector]=stats
-      else:
-        detectors[detector]=[0,1]
-      if guess in encoders.keys():
-        stats=encoders[guess]
-        stats[1]=stats[1]+1
-        encoders[guess]=stats
-      else:
-        encoders[guess]=[0,1,0]
-      if answer in encoders.keys():
-        stats=encoders[answer]
-        stats[2]=stats[2]+1
-        encoders[answer]=stats
-      else:
-        encoders[answer]=[0,0,1]
+      wf.write(','.join(blocked))
+    wf.write("\n")
+    wf.close()
+    print("Found %d blocked ports with nmap" % (len(blocked)))
+  else:
+    print('No nmap data found')
 
-  f=open('output/detectors.csv', 'wb')
-  for detector in detectors:
-    stats=detectors[detector]
-    f.write(detector+','+str(stats[0])+','+str(stats[1])+"\n")
-  f.close()
-  f=open('output/encoders.csv', 'wb')
-  for encoder in encoders:
-    stats=encoders[encoder]
-    f.write(encoder+','+str(stats[0])+','+str(stats[1])+','+str(stats[2])+"\n")
-  f.close()
+def extractPort(line):
+  return int(line.strip().split('/')[0])
 
-# Generate scores for encoders and detectors based on the combined output file
 @task
-@needs(['combine'])
-def diffScore(options):
-  diffs={
-    'Dust-obfsproxy': [0,0],
-    'Dust-SSL': [0, 0],
-    'obfsproxy-SSL': [0,0]
-  }
+def compile(options):
+  pass
 
-  if not os.path.exists('output/combined.csv'):
-    return
-  if os.path.exists('output/diff.csv'):
-    os.remove('output/diff.csv')
-  data=load('output/combined.csv', False)
-  for row in data:
-    detector, tracename, d1, d2, d3, guess, answer, correct=row
-    if guess==answer:
-      if answer=='obfsproxy':
-        diffs['Dust-obfsproxy'][0]=diffs['Dust-obfsproxy'][0]+1
-        diffs['obfsproxy-SSL'][0]=diffs['obfsproxy-SSL'][0]+1
-      elif answer=='SSL':
-        diffs['Dust-SSL'][0]=diffs['Dust-SSL'][0]+1
-        diffs['obfsproxy-SSL'][0]=diffs['obfsproxy-SSL'][0]+1
-      elif answer=='Dust':
-        diffs['Dust-obfsproxy'][0]=diffs['Dust-obfsproxy'][0]+1
-        diffs['Dust-SSL'][0]=diffs['Dust-SSL'][0]+1
-      else:
-        print('Unknown answer: '+str(answer))
-    else:
-      if answer=='obfsproxy' and guess=='SSL':
-        diffs['obfsproxy-SSL'][1]=diffs['obfsproxy-SSL'][1]+1
-      elif answer=='obfsproxy' and guess=='Dust':
-        diffs['Dust-obfsproxy'][1]=diffs['Dust-obfsproxy'][1]+1
-      elif answer=='SSL' and guess=='obfsproxy':
-        diffs['obfsproxy-SSL'][1]=diffs['obfsproxy-SSL'][1]+1
-      elif answer=='SSL' and guess=='Dust':
-        diffs['Dust-SSL'][1]=diffs['Dust-SSL'][1]+1
-      elif answer=='Dust' and guess=='obfsproxy':
-        diffs['Dust-obfsproxy'][1]=diffs['Dust-obfsproxy'][1]+1
-      elif answer=='Dust' and guess=='SSL':
-        diffs['Dust-SSL'][1]=diffs['Dust-SSL'][1]+1
-      else:
-        print('Unknown answer or guess: '+str(answer)+' '+str(guess))
-
-  f=open('output/diffs.csv', 'wb')
-  for diff in diffs:
-    stats=diffs[diff]
-    f.write(diff+','+str(stats[0])+','+str(stats[1])+"\n")
-  f.close()
-
-# Generate scores for encoders and detectors based on the combined output file
-@task
-@needs(['score'])
-def errorRate(options):
-  if not os.path.exists('output/detectors.csv'):
-    return
-  data=load('output/detectors.csv', False)
-  for row in data:
-    detector, correct, incorrect=row
-    correct=float(correct)
-    incorrect=float(incorrect)
-    total=correct+incorrect
-    pc=int(round((correct*100)/total))
-    print(detector+': '+str(pc)+'% detected')
-
-  print('')
-
-  if not os.path.exists('output/encoders.csv'):
-    return
-  data=load('output/encoders.csv', False)
-  for row in data:
-    encoder, correct, fpos, fneg=row
-    correct=float(correct)
-    fpos=float(fpos)
-    fneg=float(fneg)
-    total=correct+fpos+fneg
-    pc=round((correct*100)/total)
-    pp=round((fpos*100)/total)
-    pn=round((fneg*100)/total)
-    print(encoder+': '+str(int(pc))+'% ('+str(int(pp))+'%/'+str(int(pn))+'%) detected')
-
-  print('')
-
-  if not os.path.exists('output/diffs.csv'):
-    return
-  data=load('output/diffs.csv', False)
-  for row in data:
-    pair, correct, incorrect=row
-    correct=float(correct)
-    incorrect=float(incorrect)
-    total=correct+incorrect
-    pc=int(round((correct*100)/total))
-    print(pair+': '+str(pc)+'% distinguishable')

@@ -11,5 +11,8 @@ import os
 from fabric.api import cd, run
 
 def list():
-  with cd('blockint-test'):
-    run('ls *.zip')
+  run('ls *.zip')
+
+def update():
+  with cd('blocking-test'):
+    run('git pull origin master')
