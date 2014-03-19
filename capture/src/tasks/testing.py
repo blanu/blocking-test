@@ -199,7 +199,7 @@ def run_local_dust_replay_http_server(options):
 
 @task
 def run_local_dust_replay_http_client(options):
-  sh('~/Dust-tools/dist/build/replay-client/replay-client models/http.ps')
+  sh('~/blocking-test/capture/bin/replay-client models/http.ps')
 
 @task
 def kill_dust_replay_http(options):
