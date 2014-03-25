@@ -17,4 +17,4 @@ if [ ! -e "$HOME/.ssh/config" ]; then
     cp ~/blocking-test/capture/config/ssh-config ~/.ssh/config
 fi
 
-#scripts/install-deps.sh
+scripts/install-deps.sh
