@@ -117,8 +117,11 @@ def configure(options):
   devices=set([])
   for line in lines:
     if line[0]!='\t' and line[0]!=' ':
-      device=line.split(':')[0]
-      devices.add(device)
+      if ':' in line:
+        line=line.split(':')[0]
+      if ' ' in line:
+        line=line.split(' ')[0]
+      devices.add(line)
   print('Detected network devices: '+str(list(devices)))
   if 'wlan1' in devices:
     prefDev='wlan1'
