@@ -6,7 +6,8 @@ sudo apt-get install python-scapy
 sudo apt-get install firefox
 #sudo apt-get install haskell-platform
 sudo pip install paver
-sudo pip install webdriverplus
+sudo pip install -U selenium
+sudo pip install -U webdriverplus
 sudo pip install fabric
 sudo apt-get install libssl-dev libssl1.0.0
 
