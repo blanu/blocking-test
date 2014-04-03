@@ -4,6 +4,7 @@ lib/*
 build/*
 deps/*
 **/*.pyc
+capture/src/tasks/*.pyc
 *.pcap
 *.csv
 *.pdf

@@ -51,6 +51,58 @@ def qsh(command):
   sh(command+' >>traces/tasklog.txt')
 
 @task
+def sanity(options):
+  home=os.getenv('HOME')
+  if os.path.exists(home+'/.ssh/id_rsa.pub'):
+    f=open(home+'/.ssh/id_rsa.pub')
+    homekey=f.read()
+    f.close()
+  else:
+    print('Sanity check failure. No SSH key for user account.')
+    homekey=None
+
+  if not os.path.exists(home+'/.ssh/config'):
+    print('Sanity check failure. No SSH config for user account.')
+
+  if os.path.exists('/root/.ssh/id_rsa.pub'):
+    f=open('/root/.ssh/id_rsa.pub')
+    rootkey=f.read()
+    f.close()
+  else:
+    print('Sanity check failure. No SSH key for root account.')
+    rootkey=None
+
+  if homekey and rootkey:
+    if homeykey!=rootkey:
+      print('Sanity check failure. SSH keys for user and root accounts differ.')
+
+  if homekey:
+    sanityfile=options.testing.traceDir+'/sanity1.txt'
+    if os.path.exists(sanityfile):
+      os.remove(sanityfile)
+    sh('ssh against@%s "echo testing" >%s' % (options.testing.traceHost, sanityfile))
+    if os.path.exists(sanityfile):
+      f=open(sanityfile)
+      line=f.read().strip()
+      if line!='testing':
+        print('Sanity check failure. SSH from user account produced unexpected output.')
+    else:
+      print('Sanity check failure. SSH from user account produced no output.')
+
+  if rootkey:
+    sanityfile=options.testing.traceDir+'/sanity2.txt'
+    if os.path.exists(sanityfile):
+      os.remove(sanityfile)
+    sh('sudo ssh against@%s "echo testing" >%s' % (options.testing.traceHost, sanityfile))
+    if os.path.exists(sanityfile):
+      f=open(sanityfile)
+      line=f.read().strip()
+      if line!='testing':
+        print('Sanity check failure. SSH from root account produced unexpected output.')
+    else:
+      print('Sanity check failure. SSH from root account produced no output.')
+
+@task
 def configure(options):
   country=raw_input("Enter the country where you are conducting this test: ")
   network=raw_input("Enter the type of network (home, business, academic, etc.): ")
