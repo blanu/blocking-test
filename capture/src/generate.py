@@ -7,7 +7,8 @@
 import time
 import unittest
 
-import webdriverplus as webdriver
+#import webdriverplus as webdriver
+from selenium import webdriver
 
 # Generate Tor traffic
 class TorTests(unittest.TestCase):
@@ -39,7 +40,8 @@ class TorTests(unittest.TestCase):
 class HttpTests(unittest.TestCase):
   # Set Firefox to use an encoder as a SOCKS proxy
   def setUp(self):
-    self.browser=webdriver.WebDriver('firefox', reuse_browser=True)
+    #self.browser=webdriver.WebDriver('firefox', reuse_browser=True)
+    self.browser=webdriver.Firefox()
 
   def test_rwb(self):
     self.browser.get('http://en.rsf.org/')
@@ -80,7 +82,8 @@ class HttpsTests(unittest.TestCase):
 #    profile=webdriver.FirefoxProfile()
 #    profile.set_preference('network.proxy.type', 0)
 #    self.browser=webdriver.Firefox(profile)
-    self.browser=webdriver.WebDriver('firefox', reuse_browser=True)
+#    self.browser=webdriver.WebDriver('firefox', reuse_browser=True)
+    self.browser=webdriver.Firefox()
 
   def test_google(self):
     self.browser.get('https://encrypted.google.com/')
