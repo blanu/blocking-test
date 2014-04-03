@@ -73,7 +73,7 @@ def sanity(options):
     rootkey=None
 
   if homekey and rootkey:
-    if homeykey!=rootkey:
+    if homekey!=rootkey:
       print('Sanity check failure. SSH keys for user and root accounts differ.')
 
   if homekey:
