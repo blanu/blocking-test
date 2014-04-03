@@ -11,7 +11,7 @@ from util import load
 
 sys.path.append(os.path.abspath('.'))
 
-expectedPorts=Set([22, 25, 554, 3306, 5222, 5269, 5280, 7070, 7777])
+expectedPorts=Set([22, 25, 554, 3306, 5222, 5269, 5280, 7777])
 
 def safe_task(name, options):
   print("Execuring task %s. Please wait." % (name))

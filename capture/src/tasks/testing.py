@@ -24,7 +24,6 @@ options(
   testing=Bunch(
     traceDir='traces',
     traceHost='162.209.102.232',
-    captureDevice='wlan1'
   )
 )
 
@@ -58,9 +57,33 @@ def configure(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
+  sh('ifconfig | tee %s/ifconfig.txt' % (traceDir))
+  f=open(traceDir+'/ifconfig.txt')
+  lines=f.readlines()
+  f.close()
+
+  devices=set([])
+  for line in lines:
+    if line[0]!='\t':
+      device=line.split(':')[0]
+      devices.add(device)
+  print('Detected network devices: '+str(list(devices)))
+  if 'wlan1' in devices:
+    prefDev='wlan1'
+  elif 'eth1' in devices:
+    prefDev='eth1'
+  elif 'eth0' in devices:
+    prefDev='eth0'
+  else:
+    prefDev='None'
+  if prefDev=='None':
+    print('No known devices found. Packet capture will not work.')
+  else:
+    print('Using preferred device %s for packet capture.' % (prefDev))
   f=open(traceDir+'/options.config', 'w')
   f.write(country+"\n")
   f.write(network+"\n")
+  f.write(prefDev+"\n")
   f.close()
 
 # Record traceroute to server
@@ -70,7 +93,7 @@ def traceroute(options):
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
   sh("(date; ifconfig; traceroute %s 2>&1 | tee %s/traceroute.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
-  time.sleep(30)
+  time.sleep(60)
   qsh('killall traceroute')
 
 # Record ping to server
@@ -79,7 +102,7 @@ def ping(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
-  sh("(date; ifconfig; ping %s 2>&1 | tee %s/ping.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
+  sh("(date; ifconfig; ping -c 25 %s 2>&1 | tee %s/ping.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
   time.sleep(60)
   qsh('killall ping')
 
@@ -129,23 +152,31 @@ def generate_https(options):
 @task
 @cmdopts([
   ('traceDir=', 'd', 'Directory in which to output traces'),
-  ('captureDevice=', 'c', 'Device to use for capturing traces')
 ])
 def capture_http(options):
-  capture(options.testing.traceDir, options.testing.captureDevice, 'http')
+  capture(options.testing.traceDir, 'http')
 
 # Capture HTTPS traffic into traces in the specified directory
 @task
 @cmdopts([
   ('traceDir=', 'd', 'Directory in which to output traces'),
-  ('captureDevice=', 'c', 'Device to use for capturing traces')
 ])
 def capture_https(options):
-  capture(options.testing.traceDir, options.testing.captureDevice, 'https')
+  capture(options.testing.traceDir, 'https')
 
-def capture(traceDir, captureDevice, target):
+def capture(traceDir, target):
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
+
+  f=open(traceDir+'/options.config')
+  lines=f.readlines()
+  f.close()
+  if len(lines)<3 or lines[2].strip()=='None':
+    print('No device configuration, defaulting to wlan1')
+    captureDevice='wlan1'
+  else:
+    captureDevice=lines[2].strip()
+    print('Detected preferred network device '+captureDevice)
 
   qsh('touch CAPTURE_RUNNING')
   qsh("sudo src/capture.py %s %s/%s-%s.pcap &" % (captureDevice, str(traceDir), str(target), str(timestamp())))

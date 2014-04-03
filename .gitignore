@@ -3,7 +3,7 @@ include/*
 lib/*
 build/*
 deps/*
-*.pyc
+**/*.pyc
 *.pcap
 *.csv
 *.pdf
