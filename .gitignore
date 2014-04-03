@@ -40,3 +40,6 @@ capture/CAPTURE_RUNNING
 capture/traces/
 capture/build
 capture/*.zip
+process/analysis
+process/datasets
+process/traces
