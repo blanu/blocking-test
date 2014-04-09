@@ -27,9 +27,20 @@ options(
   )
 )
 
+testsets=["general"]
+
 @task
 def all(options):
+  traceDir=options.testing.traceDir
   safe_task('configure', options)
+  (country, network, prefDev, verbose, testset)=parseConfig(traceDir)
+  if verbose:
+    sh('paver all_tests')
+  else:
+    sh('paver -q all_tests')
+
+@task
+def all_tests(options):
   safe_task('traceroute', options)
   safe_task('ping', options)
   safe_task('nmap', options)
@@ -105,7 +116,36 @@ def sanity(options):
 @task
 def configure(options):
   country=raw_input("Enter the country where you are conducting this test: ")
+  if country.strip()=="":
+    country='unknown'
   network=raw_input("Enter the type of network (home, business, academic, etc.): ")
+  if network.strip()=="":
+    country='unknown'
+  verbose=raw_input("verbose or quiet (default: quiet): ")
+  if verbose.strip()!="verbose" and verbose.strip()!='quiet':
+    print('Defaulting to quiet.')
+    verbose='quiet'
+  print('Available test sets:')
+  if len(testsets)>1:
+    for i in range(len(testsets)):
+      test=testsets[i]
+      print('['+str(i+1)+'] '+test)
+    testset=raw_input("Choose a test set (default: 1): ").strip()
+    if testset=="":
+      print('Defaulting to test set 1.')
+      testset="1"
+    else:
+      try:
+        i=int(testset)
+        if i<1 or i>len(testsets):
+          print('Defaulting to test set 1.')
+          testset="1"
+      except:
+        print('Defaulting to test set 1.')
+        testset="1"
+  else:
+    testset="1"
+
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
@@ -139,7 +179,33 @@ def configure(options):
   f.write(country+"\n")
   f.write(network+"\n")
   f.write(prefDev+"\n")
+  f.write(verbose+"\n")
+  f.write(testset+"\n")
   f.close()
+
+def parseConfig(traceDir):
+  if os.path.exists(traceDir+'/options.config'):
+    f=open(traceDir+'/options.config')
+    country=sanitize(f.readline().strip())
+    network=f.readline().strip()
+    prefDev=f.readline().strip()
+    verbose=f.readline().strip()=="verbose"
+    testset=f.readline().strip()
+    if testset=="":
+      testset=0
+    else:
+      try:
+        i=int(testset)
+        if i<1 or i>len(testsets):
+          testset=0
+        else:
+          testset=i-1
+      except:
+        testset=0
+    f.close()
+    return (country, network, prefDev, verbose, testsets[testset])
+  else:
+    return ('unknown', 'unknown', 'wlan1', False)
 
 # Record traceroute to server
 @task
@@ -270,8 +336,8 @@ def ssh(options):
 
 @task
 def replay_http(options):
-  safe_task('run_remote_dust_replay_http_server', options)
-  time.sleep(5)
+#  safe_task('run_remote_dust_replay_http_server', options)
+#  time.sleep(5)
   safe_task('run_local_dust_replay_http_client', options)
   time.sleep(5)
 
@@ -290,7 +356,7 @@ def run_local_dust_replay_http_client(options):
 @task
 def kill_dust_replay_http(options):
   safe_task('kill_local_dust_replay_http_client', options)
-  safe_task('kill_remote_dust_replay_http_server', options)
+#  safe_task('kill_remote_dust_replay_http_server', options)
 
 @task
 def kill_remote_dust_replay_http_server(options):
