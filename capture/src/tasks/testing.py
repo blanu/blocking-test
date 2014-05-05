@@ -27,7 +27,7 @@ options(
   )
 )
 
-testsets=["general"]
+testsets=["General", "K", "J"]
 
 @task
 def all(options):
@@ -205,7 +205,11 @@ def parseConfig(traceDir):
     f.close()
     return (country, network, prefDev, verbose, testsets[testset])
   else:
-    return ('unknown', 'unknown', 'wlan1', False)
+    return ('unknown', 'unknown', 'wlan1', False, "General")
+
+def getTestset(traceDir):
+  (country, network, prefDev, verbose, testset)=parseConfig(traceDir)
+  return testset
 
 # Record traceroute to server
 @task
@@ -213,7 +217,7 @@ def traceroute(options):
   traceDir=options.testing.traceDir
   if not os.path.exists(traceDir):
     os.mkdir(traceDir)
-  sh("(date; ifconfig; traceroute %s 2>&1 | tee %s/traceroute.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
+  sh("(date; ifconfig; traceroute -a %s 2>&1 | tee %s/traceroute.txt) >>traces/tasklog.txt &" % (options.testing.traceHost, traceDir))
   time.sleep(60)
   qsh('killall traceroute')
 
@@ -261,13 +265,15 @@ def postprocess(options):
 @task
 def generate_http(options):
   traceDir=options.testing.traceDir
-  qsh("nosetests generate:HttpTests 2>&1 | tee %s/generate-http.txt" % (traceDir))
+  test=getTestset(traceDir)
+  qsh("nosetests generate:Http%sTests 2>&1 | tee %s/generate-http.txt" % (test, traceDir))
 
 # Generate HTTPS traffic
 @task
 def generate_https(options):
   traceDir=options.testing.traceDir
-  qsh("nosetests generate:HttpsTests 2>&1 | tee %s/generate-https.txt" % (traceDir))
+  test=getTestset(traceDir)
+  qsh("nosetests generate:Https%sTests 2>&1 | tee %s/generate-https.txt" % (test, traceDir))
 
 # Capture HTTP traffic into traces in the specified directory
 @task

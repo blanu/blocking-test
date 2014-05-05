@@ -44,3 +44,6 @@ capture/*.zip
 process/analysis
 process/datasets
 process/traces
+process/tasks/*.pyc
+process/src/*.pyc
+capture/src/*.pyc
