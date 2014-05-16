@@ -1,5 +1,6 @@
 # This is a set of tasks for processing the output of the detectors.
 
+import sys
 import os
 
 from paver.easy import *

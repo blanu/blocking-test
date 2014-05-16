@@ -179,6 +179,47 @@ def extractTraceroute(line):
   return (AS, host, p1, p2, p3)
 
 @task
+def http(options):
+  nose('http')
+
+@task
+def https(options):
+  nose('https')
+
+def nose(protocol):
+  if os.path.exists('traces/dataset.id'):
+    f=open('traces/dataset.id')
+    setid=f.readline().strip()
+    f.close()
+  else:
+    print('Dataset has no id')
+    return
+  if os.path.exists("traces/generate-%s.txt" % (protocol)):
+    f=open("traces/generate-%s.txt" % (protocol))
+    lines=f.readlines()
+    results=map(parseNose, list(lines[0].strip()))
+    if not os.path.exists('analysis'):
+      os.mkdir('analysis')
+    if not os.path.exists('analysis/'+setid):
+      os.mkdir('analysis/'+setid)
+    wf=open('analysis/%s/generate-%s.csv' % (setid, protocol), 'w')
+    wf.write("Test Success\n")
+    for result in results:
+      wf.write(result+"\n")
+    wf.close()
+    print("Found %d pages with %s" % (len(results), protocol))
+  else:
+    print("No %s data found" % (protocol))
+
+def parseNose(char):
+  if char=='.':
+    return 'Success'
+  elif char=='E':
+    return 'Failure'
+  else:
+    return 'Unknown'
+
+@task
 def compile(options):
   pass
 
