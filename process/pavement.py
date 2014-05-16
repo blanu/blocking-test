@@ -12,6 +12,7 @@ from paver.easy import *
 from paver.path import *
 
 sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('src'))
 
 # Options required by different tasks
 options(
