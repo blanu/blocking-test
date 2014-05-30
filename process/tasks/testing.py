@@ -1,6 +1,8 @@
 import os
 import sys
 import shutil
+import yaml
+import glob
 
 from paver.easy import *
 from paver.path import *
@@ -24,9 +26,13 @@ def safe_task(name, options):
   print('')
 
 @task
-def all(options):
-  safe_task('nmap')
-  safe_task('compile', options)
+def analyze(options):
+  safe_task('nmap', options)
+  safe_task('ping', options)
+  safe_task('traceroute', options)
+  safe_task('http', options)
+  safe_task('https', options)
+  safe_task('dust_replay_http', options)
 
 @task
 def ls(options):
@@ -220,6 +226,250 @@ def parseNose(char):
     return 'Unknown'
 
 @task
-def compile(options):
-  pass
+def dust_replay_http(options):
+  if os.path.exists('traces/dataset.id'):
+    f=open('traces/dataset.id')
+    setid=f.readline().strip()
+    f.close()
+  else:
+    print('Dataset has no id')
+    return
+  files=glob.glob('traces/dust_replay_http*.pcap')
+  if len(files)>=1:
+    size=os.path.getsize(files[0])
+    if not os.path.exists('analysis'):
+      os.mkdir('analysis')
+    if not os.path.exists('analysis/'+setid):
+      os.mkdir('analysis/'+setid)
+    wf=open('analysis/%s/generate-dust_replay_http.csv' % (setid), 'w')
+    wf.write("Test Success\n")
+    wf.write(str(size)+"\n")
+    wf.close()
+    print("Found dust_replay_http pcap with size %d" % (size))
+  else:
+    print("No dust_replay_http data found")
 
+@task
+def compile(options):
+  if os.path.exists('sets.yaml'):
+    f=open('sets.yaml')
+    data=f.read()
+    f.close()
+
+    sets=yaml.load(data)
+
+    for setid in sets:
+      if not os.path.exists('compiled'):
+        os.mkdir('compiled')
+      if not os.path.exists('compiled/'+setid):
+        os.mkdir('compiled/'+setid)
+      compileSet(setid, sets[setid])
+  else:
+    print('No sets.yaml file')
+    return
+
+def compileSet(setid, datasets):
+  print("Compiling set %s" % (setid))
+
+  compilePing(setid, datasets)
+  compileNmap(setid, datasets, 'blocked')
+  compileNmap(setid, datasets, 'intercepted')
+  compileTraceroute(setid, datasets)
+  compileNose(setid, datasets, 'http')
+  compileNose(setid, datasets, 'https')
+  compileSizes(setid, datasets)
+
+def compilePing(setid, datasets):
+  print("   compiling ping")
+  pings=map(parsePing, datasets)
+  f=open("compiled/%s/ping.csv" % (setid), 'w')
+  f.write(','.join(datasets)+"\n")
+
+  index=0
+  found=True
+  while found:
+    found=False
+    s=''
+    for x in range(len(datasets)):
+      ping=pings[x]
+      if index<len(ping):
+        found=True
+        s=s+ping[index]+','
+      else:
+        s=s+','
+    if found:
+      f.write(s[:-1])
+      index=index+1
+  f.close()
+
+def parsePing(dataset):
+  print("... from %s" % (dataset))
+  f=open("analysis/%s/ping.csv" % (dataset))
+  pings=f.readlines()[1:]
+  f.close()
+  return pings
+
+def compileNmap(setid, datasets, blocked):
+  print("   compiling nmap %s" % (blocked))
+
+  if blocked=='blocked':
+    results=map(parseNmapBlocked, datasets)
+  elif blocked=='intercepted':
+    results=map(parseNmapIntercepted, datasets)
+  else:
+    print('Unknown nmap type '+blocked)
+
+  f=open("compiled/%s/nmap-%s.csv" % (setid, blocked), 'w')
+  f.write(','+','.join(datasets)+"\n")
+
+  print(results)
+
+  portset=Set()
+  for result in results:
+    for item in result:
+      portset.add(int(item))
+
+  allports=sorted(list(portset))
+
+  for port in allports:
+    checks=[port]
+    for result in results:
+      if port in result:
+        checks.append(1)
+      else:
+        checks.append(0)
+    f.write(','.join(map(str,checks))+"\n")
+
+  f.close()
+
+def parseNmapBlocked(dataset):
+  return parseNmap(dataset, 'blocked')
+
+def parseNmapIntercepted(dataset):
+  return parseNmap(dataset, 'intercepted')
+
+def parseNmap(dataset, blocked):
+  print("... from %s" % (dataset))
+  f=open("analysis/%s/nmap-%s.csv" % (dataset, blocked))
+  ports=map(strip,f.readlines()[1:])
+  f.close()
+  return map(int,filter(lambda port: port!=None, ports))
+
+def strip(line):
+  s=line.strip()
+  if s=='':
+    return None
+  else:
+    return s
+
+def compileTraceroute(setid, datasets):
+  print("   compiling traceroute")
+
+  results=map(parseTraceroute, datasets)
+
+  f=open("compiled/%s/traceroute.csv" % (setid), 'w')
+  f.write(','+','.join(datasets)+"\n")
+
+  print(results)
+
+  ipset=Set()
+  for result in results:
+    for item in result:
+      ipset.add(item)
+
+  allips=sorted(list(ipset))
+
+  for ip in allips:
+    checks=[ip]
+    for result in results:
+      if ip in result:
+        checks.append(1)
+      else:
+        checks.append(0)
+    f.write(','.join(map(str,checks))+"\n")
+
+  f.close()
+
+def parseTraceroute(dataset):
+  print("... from %s" % (dataset))
+  f=open("analysis/%s/traceroute.csv" % (dataset))
+  ips=map(getIP,f.readlines()[1:])
+  f.close()
+  return ips
+
+def getIP(line):
+  return line.split(',')[1]
+
+def compileNose(setid, datasets, prot):
+  print("   compiling "+prot)
+
+  if prot=='http':
+    results=map(parseHttpResults, datasets)
+  elif prot=='https':
+    results=map(parseHttpsResults, datasets)
+  else:
+    print('Unknown protocol '+prot)
+
+  f=open("compiled/%s/generate-%s.csv" % (setid, prot), 'w')
+  f.write(','.join(datasets)+"\n")
+
+  print(results)
+
+  maxlen=max(map(len, results))
+
+  for x in range(len(results)):
+    results[x]=fill(results[x], 'NA', maxlen)
+
+  rows=[]
+  for x in range(maxlen):
+    row=[]
+    for result in results:
+      item=str(result[x])
+      row.append(item)
+    rows.append(row)
+
+  for row in rows:
+    f.write(','.join(row)+"\n")
+
+  f.close()
+
+def fill(a, c, maxLen):
+  return a + [c]*(maxLen - len(a))
+
+def parseHttpResults(dataset):
+  print("... from %s" % (dataset))
+  f=open("analysis/%s/generate-http.csv" % (dataset))
+  results=map(bool,f.readlines()[1:])
+  f.close()
+  return results
+
+def parseHttpsResults(dataset):
+  print("... from %s" % (dataset))
+  f=open("analysis/%s/generate-https.csv" % (dataset))
+  results=map(bool,f.readlines()[1:])
+  f.close()
+  return results
+
+def compileSizes(setid, datasets):
+  print("   compiling dust_replay_http")
+
+  results=map(parseSizes, datasets)
+
+  f=open("compiled/%s/generate-dust_replay_http.csv" % (setid), 'w')
+  f.write(','.join(datasets)+"\n")
+
+  print(results)
+
+  f.write(','.join(results)+"\n")
+
+  f.close()
+
+def parseSizes(dataset):
+  print("... from %s" % (dataset))
+  if os.path.exists("analysis/%s/generate-dust_replay_http.csv" % (dataset)):
+    f=open("analysis/%s/generate-dust_replay_http.csv" % (dataset))
+    result=f.readlines()[1].strip()
+    f.close()
+    return result
+  else:
+    return "NA"
