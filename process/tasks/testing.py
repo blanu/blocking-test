@@ -26,6 +26,43 @@ def safe_task(name, options):
   print('')
 
 @task
+def all(options):
+  if os.path.exists('sets.yaml'):
+    f=open('sets.yaml')
+    data=f.read()
+    f.close()
+
+    sets=yaml.load(data)
+
+    for setid in sets:
+      if not os.path.exists('compiled'):
+        os.mkdir('compiled')
+      if not os.path.exists('compiled/'+setid):
+        os.mkdir('compiled/'+setid)
+      analyzeSet(options, sets[setid])
+  else:
+    print('No sets.yaml file')
+    return
+
+def analyzeSet(options, sets):
+  if sets!=None and len(sets)>0:
+    for set in sets:
+      analyzeDataset(options, str(set))
+
+def analyzeDataset(options, setid):
+  print('Analyzing '+setid)
+  if inspectDataset(setid):
+    safe_task('analyze', options)  
+    print('Analyzed '+setid)
+  else:
+    print('Failed to analyze '+setid)
+
+  raw_input("Continue?")
+  print('')
+  print('-'*80)
+  print('')
+
+@task
 def analyze(options):
   safe_task('nmap', options)
   safe_task('ping', options)
@@ -50,17 +87,26 @@ def sync(options):
 @consume_args
 def inspect(args):
   f=args[0]
+  inspectDataset(f)
+
+def inspectDataset(f):
   if os.path.exists('datasets/'+f+'.zip'):
     if os.path.exists('traces'):
       print('Removing traces')
       shutil.rmtree('traces')
-    sh('unzip datasets/'+f+'.zip')
-    print('Writing dataset id')
-    wf=open('traces/dataset.id', 'w')
-    wf.write(f+"\n")
-    wf.close()
+    try:
+      sh('unzip datasets/'+f+'.zip')
+      print('Writing dataset id')
+      wf=open('traces/dataset.id', 'w')
+      wf.write(f+"\n")
+      wf.close()
+      return True
+    except:
+      print('Error inspecting zip file')
+      return False
   else:
     print('Unknown dataset '+f)
+    return False
 
 @task
 def nmap(options):
@@ -263,7 +309,10 @@ def compile(options):
         os.mkdir('compiled')
       if not os.path.exists('compiled/'+setid):
         os.mkdir('compiled/'+setid)
-      compileSet(setid, sets[setid])
+      if sets[setid]!=None and len(sets[setid])>0:
+        compileSet(setid, map(str, sets[setid]))
+      else:
+        print('Empty set '+str(setid))
   else:
     print('No sets.yaml file')
     return
@@ -304,6 +353,8 @@ def compilePing(setid, datasets):
 
 def parsePing(dataset):
   print("... from %s" % (dataset))
+  if not os.path.exists("analysis/%s/ping.csv" % (dataset)):
+    return []
   f=open("analysis/%s/ping.csv" % (dataset))
   pings=f.readlines()[1:]
   f.close()
@@ -350,6 +401,8 @@ def parseNmapIntercepted(dataset):
 
 def parseNmap(dataset, blocked):
   print("... from %s" % (dataset))
+  if not os.path.exists("analysis/%s/nmap-%s.csv" % (dataset, blocked)):
+    return []
   f=open("analysis/%s/nmap-%s.csv" % (dataset, blocked))
   ports=map(strip,f.readlines()[1:])
   f.close()
@@ -392,6 +445,8 @@ def compileTraceroute(setid, datasets):
 
 def parseTraceroute(dataset):
   print("... from %s" % (dataset))
+  if not os.path.exists("analysis/%s/traceroute.csv" % (dataset)):
+    return []
   f=open("analysis/%s/traceroute.csv" % (dataset))
   ips=map(getIP,f.readlines()[1:])
   f.close()
@@ -438,6 +493,8 @@ def fill(a, c, maxLen):
 
 def parseHttpResults(dataset):
   print("... from %s" % (dataset))
+  if not os.path.exists("analysis/%s/generate-http.csv" % (dataset)):
+    return []
   f=open("analysis/%s/generate-http.csv" % (dataset))
   results=map(bool,f.readlines()[1:])
   f.close()
@@ -445,6 +502,8 @@ def parseHttpResults(dataset):
 
 def parseHttpsResults(dataset):
   print("... from %s" % (dataset))
+  if not os.path.exists("analysis/%s/generate-https.csv" % (dataset)):
+    return []
   f=open("analysis/%s/generate-https.csv" % (dataset))
   results=map(bool,f.readlines()[1:])
   f.close()
