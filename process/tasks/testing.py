@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath('.'))
 expectedPorts=Set([22, 25, 554, 3306, 5222, 5269, 5280, 7777])
 
 def safe_task(name, options):
-  print("Execuring task %s. Please wait." % (name))
+  print("Executing task %s. Please wait." % (name))
   try:
     call_task(name)
     print("Task %s completed successfully" % (name))
@@ -35,6 +35,7 @@ def all(options):
     sets=yaml.load(data)
 
     for setid in sets:
+      print('*'*10+' '+setid+' '+'*'*10)
       if not os.path.exists('compiled'):
         os.mkdir('compiled')
       if not os.path.exists('compiled/'+setid):
@@ -47,7 +48,8 @@ def all(options):
 def analyzeSet(options, sets):
   if sets!=None and len(sets)>0:
     for set in sets:
-      analyzeDataset(options, str(set))
+      if set!='unknown' and set!='extra':
+        analyzeDataset(options, str(set))
 
 def analyzeDataset(options, setid):
   print('Analyzing '+setid)
@@ -57,7 +59,7 @@ def analyzeDataset(options, setid):
   else:
     print('Failed to analyze '+setid)
 
-  raw_input("Continue?")
+  #raw_input("Continue?")
   print('')
   print('-'*80)
   print('')
