@@ -36,6 +36,8 @@ def all(options):
 
     for setid in sets:
       print('*'*10+' '+setid+' '+'*'*10)
+      if set=='unknown' or set=='extra':
+        continue
       if not os.path.exists('compiled'):
         os.mkdir('compiled')
       if not os.path.exists('compiled/'+setid):
@@ -48,8 +50,7 @@ def all(options):
 def analyzeSet(options, sets):
   if sets!=None and len(sets)>0:
     for set in sets:
-      if set!='unknown' and set!='extra':
-        analyzeDataset(options, str(set))
+      analyzeDataset(options, str(set))
 
 def analyzeDataset(options, setid):
   print('Analyzing '+setid)
@@ -307,6 +308,8 @@ def compile(options):
     sets=yaml.load(data)
 
     for setid in sets:
+      if set=='unknown' or set=='extra':
+        continue
       if not os.path.exists('compiled'):
         os.mkdir('compiled')
       if not os.path.exists('compiled/'+setid):
@@ -333,6 +336,11 @@ def compileSet(setid, datasets):
 def compilePing(setid, datasets):
   print("   compiling ping")
   pings=map(parsePing, datasets)
+  pings=filter(lambda x: x!=None, pings)
+
+  if len(pings)==0:
+    return
+
   f=open("compiled/%s/ping.csv" % (setid), 'w')
   f.write(','.join(datasets)+"\n")
 
@@ -356,7 +364,7 @@ def compilePing(setid, datasets):
 def parsePing(dataset):
   print("... from %s" % (dataset))
   if not os.path.exists("analysis/%s/ping.csv" % (dataset)):
-    return []
+    return None
   f=open("analysis/%s/ping.csv" % (dataset))
   pings=f.readlines()[1:]
   f.close()
@@ -371,6 +379,11 @@ def compileNmap(setid, datasets, blocked):
     results=map(parseNmapIntercepted, datasets)
   else:
     print('Unknown nmap type '+blocked)
+    return
+
+  results=filter(lambda x: x!=None, results)
+  if len(results)==0:
+    return
 
   f=open("compiled/%s/nmap-%s.csv" % (setid, blocked), 'w')
   f.write(','+','.join(datasets)+"\n")
@@ -404,7 +417,7 @@ def parseNmapIntercepted(dataset):
 def parseNmap(dataset, blocked):
   print("... from %s" % (dataset))
   if not os.path.exists("analysis/%s/nmap-%s.csv" % (dataset, blocked)):
-    return []
+    return None
   f=open("analysis/%s/nmap-%s.csv" % (dataset, blocked))
   ports=map(strip,f.readlines()[1:])
   f.close()
@@ -421,6 +434,9 @@ def compileTraceroute(setid, datasets):
   print("   compiling traceroute")
 
   results=map(parseTraceroute, datasets)
+  results=filter(lambda x: x!=None, results)
+  if len(results)==0:
+    return
 
   f=open("compiled/%s/traceroute.csv" % (setid), 'w')
   f.write(','+','.join(datasets)+"\n")
@@ -448,7 +464,7 @@ def compileTraceroute(setid, datasets):
 def parseTraceroute(dataset):
   print("... from %s" % (dataset))
   if not os.path.exists("analysis/%s/traceroute.csv" % (dataset)):
-    return []
+    return None
   f=open("analysis/%s/traceroute.csv" % (dataset))
   ips=map(getIP,f.readlines()[1:])
   f.close()
@@ -466,6 +482,11 @@ def compileNose(setid, datasets, prot):
     results=map(parseHttpsResults, datasets)
   else:
     print('Unknown protocol '+prot)
+    return
+
+  results=filter(lambda x: x!=None, results)
+  if len(results)==0:
+    return
 
   f=open("compiled/%s/generate-%s.csv" % (setid, prot), 'w')
   f.write(','.join(datasets)+"\n")
@@ -496,7 +517,7 @@ def fill(a, c, maxLen):
 def parseHttpResults(dataset):
   print("... from %s" % (dataset))
   if not os.path.exists("analysis/%s/generate-http.csv" % (dataset)):
-    return []
+    return None
   f=open("analysis/%s/generate-http.csv" % (dataset))
   results=map(bool,f.readlines()[1:])
   f.close()
@@ -505,7 +526,7 @@ def parseHttpResults(dataset):
 def parseHttpsResults(dataset):
   print("... from %s" % (dataset))
   if not os.path.exists("analysis/%s/generate-https.csv" % (dataset)):
-    return []
+    return None
   f=open("analysis/%s/generate-https.csv" % (dataset))
   results=map(bool,f.readlines()[1:])
   f.close()
@@ -515,6 +536,9 @@ def compileSizes(setid, datasets):
   print("   compiling dust_replay_http")
 
   results=map(parseSizes, datasets)
+  results=filter(lambda x: x!=None, results)
+  if len(results)==0:
+    return
 
   f=open("compiled/%s/generate-dust_replay_http.csv" % (setid), 'w')
   f.write(','.join(datasets)+"\n")
@@ -533,4 +557,4 @@ def parseSizes(dataset):
     f.close()
     return result
   else:
-    return "NA"
+    return None
