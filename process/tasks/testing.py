@@ -490,8 +490,8 @@ def compileNose(setid, datasets, prot):
     print('Unknown protocol '+prot)
     return
 
-#  datasets, results=filterBothWith(datasets, results, notNone)
-  results=filter(notNone, results)
+  datasets, results=filterBothWith(datasets, results, notNone)
+#  results=filter(notNone, results)
   if len(results)==0:
     return
 
