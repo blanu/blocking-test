@@ -326,12 +326,12 @@ def compileSet(setid, datasets):
   print("Compiling set %s" % (setid))
 
   compilePing(setid, datasets)
-#  compileNmap(setid, datasets, 'blocked')
-#  compileNmap(setid, datasets, 'intercepted')
-#  compileTraceroute(setid, datasets)
-#  compileNose(setid, datasets, 'http')
-#  compileNose(setid, datasets, 'https')
-#  compileSizes(setid, datasets)
+  compileNmap(setid, datasets, 'blocked')
+  compileNmap(setid, datasets, 'intercepted')
+  compileTraceroute(setid, datasets)
+  compileNose(setid, datasets, 'http')
+  compileNose(setid, datasets, 'https')
+  compileSizes(setid, datasets)
 
 def filterWith(a, b, f):
   z=zip(a, b)
@@ -398,8 +398,6 @@ def compileNmap(setid, datasets, blocked):
   f=open("compiled/%s/nmap-%s.csv" % (setid, blocked), 'w')
   f.write('port,'+','.join(datasets)+"\n")
 
-  print(results)
-
   portset=Set()
   for result in results:
     for item in result:
@@ -451,8 +449,6 @@ def compileTraceroute(setid, datasets):
   f=open("compiled/%s/traceroute.csv" % (setid), 'w')
   f.write('IP,'+','.join(datasets)+"\n")
 
-  print(results)
-
   ipset=Set()
   for result in results:
     for item in result:
@@ -499,13 +495,8 @@ def compileNose(setid, datasets, prot):
   if len(results)==0:
     return
 
-  print('results@@')
-  print(results)
-
   f=open("compiled/%s/generate-%s.csv" % (setid, prot), 'w')
   f.write(','.join(datasets)+"\n")
-
-  print(results)
 
   maxlen=max(map(len, results))
 
@@ -556,8 +547,6 @@ def compileSizes(setid, datasets):
 
   f=open("compiled/%s/generate-dust_replay_http.csv" % (setid), 'w')
   f.write(','.join(datasets)+"\n")
-
-  print(results)
 
   f.write(','.join(results)+"\n")
 
