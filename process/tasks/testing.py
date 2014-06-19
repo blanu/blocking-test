@@ -326,47 +326,57 @@ def compileSet(setid, datasets):
   print("Compiling set %s" % (setid))
 
   compilePing(setid, datasets)
-  compileNmap(setid, datasets, 'blocked')
-  compileNmap(setid, datasets, 'intercepted')
-  compileTraceroute(setid, datasets)
-  compileNose(setid, datasets, 'http')
-  compileNose(setid, datasets, 'https')
-  compileSizes(setid, datasets)
+#  compileNmap(setid, datasets, 'blocked')
+#  compileNmap(setid, datasets, 'intercepted')
+#  compileTraceroute(setid, datasets)
+#  compileNose(setid, datasets, 'http')
+#  compileNose(setid, datasets, 'https')
+#  compileSizes(setid, datasets)
+
+def filterWith(a, b, f):
+  z=zip(a, b)
+  wrapper=lambda t: f(t[1])
+  filtered=filter(wrapper, z)
+  return unzip(filtered)[0]
+
+def filterBothWith(a, b, f):
+  z=zip(a, b)
+  wrapper=lambda t: f(t[1])
+  filtered=filter(wrapper, z)
+  l=unzip(filtered)
+  if len(l)==0:
+    return ([], [])
+  else:
+    return (list(l[0]), list(l[1]))
+
+def unzip(l):
+  return zip(*l)
+
+def notNone(x):
+  return x!=None
 
 def compilePing(setid, datasets):
   print("   compiling ping")
   pings=map(parsePing, datasets)
-  pings=filter(lambda x: x!=None, pings)
+  datasets, pings=filterBothWith(datasets, pings, notNone)
 
   if len(pings)==0:
     return
 
-  f=open("compiled/%s/ping.csv" % (setid), 'w')
+  f=open("compiled/%s/ping-summary.csv" % (setid), 'w')
   f.write(','.join(datasets)+"\n")
 
-  index=0
-  found=True
-  while found:
-    found=False
-    s=''
-    for x in range(len(datasets)):
-      ping=pings[x]
-      if index<len(ping):
-        found=True
-        s=s+ping[index]+','
-      else:
-        s=s+','
-    if found:
-      f.write(s[:-1])
-      index=index+1
+  avgs,stddevs=unzip(pings)
+  f.write(','.join(avgs)+"\n")
+  f.write(','.join(stddevs)+"\n")  
   f.close()
 
 def parsePing(dataset):
   print("... from %s" % (dataset))
-  if not os.path.exists("analysis/%s/ping.csv" % (dataset)):
+  if not os.path.exists("analysis/%s/ping-summary.csv" % (dataset)):
     return None
-  f=open("analysis/%s/ping.csv" % (dataset))
-  pings=f.readlines()[1:]
+  f=open("analysis/%s/ping-summary.csv" % (dataset))
+  pings=f.readlines()[1].strip().split(',')
   f.close()
   return pings
 
@@ -381,12 +391,12 @@ def compileNmap(setid, datasets, blocked):
     print('Unknown nmap type '+blocked)
     return
 
-  results=filter(lambda x: x!=None, results)
+  datasets, results=filterBothWith(datasets, results, notNone)
   if len(results)==0:
     return
 
   f=open("compiled/%s/nmap-%s.csv" % (setid, blocked), 'w')
-  f.write(','+','.join(datasets)+"\n")
+  f.write('port,'+','.join(datasets)+"\n")
 
   print(results)
 
@@ -434,12 +444,12 @@ def compileTraceroute(setid, datasets):
   print("   compiling traceroute")
 
   results=map(parseTraceroute, datasets)
-  results=filter(lambda x: x!=None, results)
+  datasets, results=filterBothWith(datasets, results, notNone)
   if len(results)==0:
     return
 
   f=open("compiled/%s/traceroute.csv" % (setid), 'w')
-  f.write(','+','.join(datasets)+"\n")
+  f.write('IP,'+','.join(datasets)+"\n")
 
   print(results)
 
@@ -484,9 +494,13 @@ def compileNose(setid, datasets, prot):
     print('Unknown protocol '+prot)
     return
 
-  results=filter(lambda x: x!=None, results)
+#  datasets, results=filterBothWith(datasets, results, notNone)
+  results=filter(notNone, results)
   if len(results)==0:
     return
+
+  print('results@@')
+  print(results)
 
   f=open("compiled/%s/generate-%s.csv" % (setid, prot), 'w')
   f.write(','.join(datasets)+"\n")
@@ -536,7 +550,7 @@ def compileSizes(setid, datasets):
   print("   compiling dust_replay_http")
 
   results=map(parseSizes, datasets)
-  results=filter(lambda x: x!=None, results)
+  datasets, results=filterBothWith(datasets, results, notNone)
   if len(results)==0:
     return
 
